@@ -1,0 +1,4 @@
+﻿
+function initReader(address) {
+
+}
