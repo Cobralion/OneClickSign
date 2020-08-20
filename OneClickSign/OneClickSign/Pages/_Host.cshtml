@@ -13,6 +13,8 @@
     <title>OneClickSign</title>
     <base href="~/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link href="_content/Blazored.Modal/blazored-modal.css" rel="stylesheet" />
+    <link href="_content/Mobsites.Blazor.SignaturePad/bundle.css" rel="stylesheet" />
     <link href="css/site.css" rel="stylesheet" />
 </head>
 <body>
@@ -32,13 +34,10 @@
     </div>
 
     <script src="_framework/blazor.server.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.1.1/pdfobject.js"></script>
-    <script>
-        var options = {
-            pdfOpenParams: { scrollbar: '1', toolbar: '0', statusbar: '0', messages: '0', navpanes: '0', height: '720px', width: '1080px' }
-        };
-
-        PDFObject.embed('https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', '#pdf', options);
-    </script>
+    <script src="_content/Blazored.Modal/blazored.modal.js"></script>
+    <script src="_content/Mobsites.Blazor.SignaturePad/bundle.js"></script>
+    <script src="~/js/index.js"></script>
 </body>
 </html>

@@ -1,6 +1,51 @@
 ﻿@page "/"
 
+@inject IJSRuntime JSRuntime;
+@inject IModalService Modal;
+
 <h1>OneClickSign</h1>
 <hr />
 
-<div id="pdf"></div>
+<div @ref="pdf" style="height: 70vh;"></div>
+<br />
+
+<EditForm Model="@submit" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <p><InputCheckbox id="checkbox" @bind-Value="submit.HasAgreed" /> I agree to the above written.</p>
+
+    <button type="submit">Submit</button>
+</EditForm>
+
+
+@code {
+
+    ElementReference pdf;
+    public OneClickSign.Data.Submit submit;
+
+
+    private Uri PDFUri
+    {
+        get => new Uri("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf");
+    }
+
+    protected override void OnInitialized()
+    {
+        submit = new Data.Submit();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+            await JSRuntime.InvokeVoidAsync("initReader", PDFUri.ToString(), pdf);
+    }
+
+    private void HandleValidSubmit()
+    {
+
+        Modal.Show<SignPopUpWindow>("Sing Window");
+
+        submit = new Data.Submit();
+    }
+}
