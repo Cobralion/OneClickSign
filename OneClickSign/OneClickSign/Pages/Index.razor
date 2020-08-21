@@ -2,6 +2,7 @@
 
 @inject IJSRuntime JSRuntime;
 @inject IModalService Modal;
+@inject NavigationManager NavManager;
 
 <h1>OneClickSign</h1>
 <hr />
@@ -24,12 +25,6 @@
     ElementReference pdf;
     public OneClickSign.Data.Submit submit;
 
-
-    private Uri PDFUri
-    {
-        get => new Uri("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf");
-    }
-
     protected override void OnInitialized()
     {
         submit = new Data.Submit();
@@ -38,14 +33,19 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if(firstRender)
-            await JSRuntime.InvokeVoidAsync("initReader", PDFUri.ToString(), pdf);
+            await JSRuntime.InvokeVoidAsync("initReader", OneClickSign.Data.Static.PDFUri.ToString(), pdf);
     }
 
-    private void HandleValidSubmit()
+    private async Task HandleValidSubmit()
     {
 
-        Modal.Show<SignPopUpWindow>("Sing Window");
+        var awaitable = Modal.Show<SignPopUpWindow>("Sign Window");
 
-        submit = new Data.Submit();
+        var modalResult = await awaitable.Result;
+
+        if (modalResult.Cancelled)
+            submit = new Data.Submit();
+        else
+            NavManager.NavigateTo("/ok/");
     }
 }

@@ -1,11 +1,111 @@
 ﻿
-<SignaturePad Style="height: 70vh; width: 70vw;">
+@using System.Text.RegularExpressions;
+@using System.IO;
+
+<SignaturePad @ref="signaturePad" Style="height: 70vh; width: 70vw;" OnSignatureChange="OnSignatureChange">
     <SignaturePadFooter FooterDirective="Sign above">
-        <SignaturePadClear Image="~/pictures/delete.png" />
-        <SignaturePadSave Image="~/pictures/done.png" />
+        <SignaturePadClear Image="/pictures/delete.png" />
+        <a @onclick="OnClickSave" style="border:none; height:36px; width: 36px; text-decoration: none;" class="hover-cursor"><img src="/pictures/done.png" style="height:36px; width: 36px;" /></a>
     </SignaturePadFooter>
 </SignaturePad>
 
 @code {
 
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+
+    object imageLock = new object();
+    private byte[] _image;
+
+    public SignaturePad signaturePad;
+
+    public SignaturePad.SupportedSaveAsTypes signatureType
+    {
+        get => SignaturePad.SupportedSaveAsTypes.png;
+    }
+
+    public byte[] Image
+    {
+        get
+        {
+            lock (imageLock)
+            {
+                return _image;
+            }
+        }
+        set
+        {
+            lock (imageLock)
+            {
+                _image = value;
+            }
+        }
+    }
+
+
+    protected override void OnInitialized()
+    {
+        Image = new byte[1];
+    }
+
+    private async Task OnSignatureChange(ChangeEventArgs eventArgs)
+    {
+
+        var dataURL = await signaturePad.ToDataURL(signatureType);
+
+        var base64Data = Regex.Match(dataURL, @"data:image/(?<type>.+?),(?<data>.+)").Groups["data"].Value;
+        var binData = Convert.FromBase64String(base64Data);
+
+        using (var stream = new MemoryStream(binData))
+        {
+            Image = stream.ToArray();
+        }
+    }
+
+    private async Task OnClickSave(MouseEventArgs e)
+    {
+
+        //System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        //stopwatch.Start();
+
+        //byte[] pdfData = await GetBytesFromUri(OneClickSign.Data.Static.PDFUri);
+
+        //stopwatch.Stop();
+        // 880 ms
+
+        try
+        {
+            byte[] pdfData = File.ReadAllBytes(@"content/test.pdf");
+
+
+            InsertImageIntoPDF(Image, pdfData, @"content/test1.pdf", new System.Numerics.Vector2(100, 100), new Vector2(50, 50));
+
+            await BlazoredModal.Close(ModalResult.Ok<string>("OK"));
+        }
+        catch
+        {
+            await BlazoredModal.Close(ModalResult.Cancel());
+        }
+    }
+
+    private void InsertImageIntoPDF(byte[] imageBytes, byte[] pdfBytes, string targetPDF, Vector2 position, Vector2 scale)
+    {
+        using (Stream pdf = new MemoryStream(pdfBytes))
+        {
+            using (Stream pdfTarget = new FileStream(targetPDF, FileMode.OpenOrCreate))
+            {
+                PdfDocument pdfDocument = new PdfDocument(new iText.Kernel.Pdf.PdfReader(pdf), new iText.Kernel.Pdf.PdfWriter(pdfTarget));
+                Document document = new Document(pdfDocument);
+                ImageData imageData = ImageDataFactory.Create(imageBytes);
+                Image image = new Image(imageData).SetFixedPosition(1, position.X, position.Y).SetWidth(scale.X).SetHeight(scale.Y);
+                document.Add(image);
+                document.Close();
+            }
+        }
+    }
+
+    private async Task<byte[]> GetBytesFromUri(Uri uri)
+    {
+        WebClient client = new WebClient();
+        return await client.DownloadDataTaskAsync(uri);
+    }
 }
