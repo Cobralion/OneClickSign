@@ -77,7 +77,7 @@
             byte[] pdfData = File.ReadAllBytes(@"content/test.pdf");
 
 
-            InsertImageIntoPDF(Image, pdfData, @"content/test1.pdf", new System.Numerics.Vector2(100, 100), new Vector2(50, 50));
+            InsertImageIntoPDF(Image, pdfData, @"content/test1.pdf", new System.Numerics.Vector2(100, 100), new Vector2(100, 100));
 
             await BlazoredModal.Close(ModalResult.Ok<string>("OK"));
         }
